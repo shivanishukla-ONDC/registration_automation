@@ -1,0 +1,7 @@
+node_modules/
+# Excel lock files created while a workbook is open
+~$*
+.env
+
+# Local spreadsheet / generated results
+*.xlsx

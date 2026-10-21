@@ -1,0 +1,20 @@
+{
+  "name": "registration-automation",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Registration automation: upload a CSV of subscriber_id + IGM_version, find each organisation in environment_access, create the IGM token, and download the result. Web page (npm start) and command-line script (npm run cli). Mock mode by default.",
+  "main": "script.js",
+  "scripts": {
+    "start": "node server.js",
+    "cli": "node script.js",
+    "help": "node script.js --help",
+    "static": "python3 -m http.server 5500 --bind 127.0.0.1 -d static"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "exceljs": "^4.4.0",
+    "pg": "^8.23.1"
+  }
+}
