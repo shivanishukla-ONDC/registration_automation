@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Registration Automation (local)</title>
+<title>Registration Automation</title>
 <style>
   :root {
     --bg: #f6f7f9; --card: #ffffff; --text: #1d2433; --muted: #5d6779; --line: #e1e5ec;
@@ -19,26 +19,35 @@
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  body.prod { border-top: 6px solid var(--bad); }
   main { max-width: 960px; margin: 0 auto; padding: 24px 16px 56px; }
   header { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 20px; }
   h1 { font-size: 22px; margin: 0; flex: 1 1 auto; }
   .badge { padding: 4px 10px; border-radius: 999px; font-size: 13px; font-weight: 600; background: var(--ok-bg); color: var(--ok); }
+  .badge.prod { background: var(--bad-bg); color: var(--bad); }
   .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
   .card h2 { font-size: 16px; margin: 0 0 4px; }
   .hint { color: var(--muted); font-size: 13px; margin: 0 0 12px; }
-  label { display: block; font-weight: 600; font-size: 13px; margin-bottom: 4px; }
-  select, input[type="number"] { padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--text); font: inherit; min-width: 140px; }
+  .switch { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; padding: 3px; background: var(--bg); }
+  .switch button { border: none; background: transparent; padding: 7px 22px; border-radius: 999px; font-weight: 700; color: var(--muted); cursor: pointer; font: inherit; font-weight: 700; }
+  .switch button[aria-checked="true"].uat { background: var(--ok); color: var(--card); }
+  .switch button[aria-checked="true"].prod { background: var(--bad); color: var(--card); }
+  .switch button:disabled { opacity: .4; cursor: not-allowed; }
   .drop { border: 2px dashed var(--line); border-radius: 12px; padding: 22px 16px; text-align: center; cursor: pointer; color: var(--muted); }
   .drop.over, .drop:focus-visible { border-color: var(--accent); color: var(--text); outline: none; }
   .drop.ready { border-style: solid; color: var(--text); }
   .row { display: flex; flex-wrap: wrap; gap: 16px; align-items: end; margin-top: 14px; }
   button, a.btn { display: inline-block; padding: 9px 16px; border-radius: 8px; border: 1px solid var(--line); background: var(--card); color: var(--text); font: inherit; font-weight: 600; cursor: pointer; text-decoration: none; }
   button.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
-  button:disabled { opacity: .5; cursor: not-allowed; }
+  button.primary:disabled { opacity: .5; cursor: not-allowed; }
   .link { background: none; border: none; padding: 0; color: var(--accent); font-weight: 600; cursor: pointer; }
   .banner { padding: 12px 14px; border-radius: 8px; margin-top: 12px; }
   .banner.error { background: var(--bad-bg); color: var(--bad); }
   .banner.warn { background: var(--warn-bg); color: var(--warn); }
+  .check { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 8px; margin-top: 12px; background: var(--warn-bg); color: var(--warn); font-weight: 500; }
+  .check.prod { background: var(--bad-bg); color: var(--bad); }
+  .check input { margin-top: 4px; }
+  input[type="text"] { padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--text); font: inherit; width: 140px; }
   .tiles { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 14px; }
   .tile { flex: 1 1 140px; border-radius: 10px; padding: 12px 14px; }
   .tile b { display: block; font-size: 26px; line-height: 1.1; }
@@ -53,12 +62,6 @@
   .pill { padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; }
   .pill.Completed { background: var(--ok-bg); color: var(--ok); }
   .pill.Failed { background: var(--bad-bg); color: var(--bad); }
-  .pill.Dry { background: var(--warn-bg); color: var(--warn); }
-  input[type="password"] { width: 100%; max-width: 280px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--text); font: inherit; }
-  .check { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 8px; margin-top: 12px; background: var(--warn-bg); color: var(--warn); font-weight: 500; }
-  .check.real { background: var(--bad-bg); color: var(--bad); }
-  .check input { margin-top: 4px; }
-  .badge.real { background: var(--bad-bg); color: var(--bad); }
   [hidden] { display: none !important; }
 </style>
 </head>
@@ -69,59 +72,52 @@
     <span class="badge" id="modeBadge">LOCAL DEMO - nothing leaves your browser</span>
   </header>
 
-  <section class="card">
-    <h2>How it works</h2>
-    <p class="hint" style="margin:0" id="howText">
-      Upload a CSV file with a <b>subscriber ID</b> and an <b>IGM version</b> for each customer. The organisation is
-      found from the subscriber ID in the built-in sample <b>environment access</b> data, then a <b>fake</b>
-      create-token call is made. No server, database or real API is used. You get the CSV back with
-      <b>org_id</b>, <b>status</b> and <b>message</b> filled in.
-    </p>
+  <section class="card" id="envCard" hidden>
+    <h2>Environment</h2>
+    <p class="hint">Choose where the tokens are created. Everything below uses the address of the environment you pick.</p>
+    <div class="switch" role="radiogroup" aria-label="Environment">
+      <button type="button" role="radio" class="uat" id="envUat" aria-checked="true">UAT</button>
+      <button type="button" role="radio" class="prod" id="envProd" aria-checked="false">PROD</button>
+    </div>
+    <p class="hint" id="envInfo" style="margin:10px 0 0"></p>
   </section>
 
   <section class="card">
-    <h2>Upload your customer CSV</h2>
-    <p class="hint">CSV file with the columns <b>subscriber_id</b> and <b>IGM_version</b> (IGMv1 or IGMv2). Rows already marked Completed are skipped.<br><b>Limit: up to <span id="maxRowsInfo"></span> rows per file</b>; any rows after that are left untouched so you can upload them in the next file.</p>
-    <div id="dropCus" class="drop" tabindex="0" role="button" aria-label="Choose the customer CSV file">
+    <h2>How it works</h2>
+    <p class="hint" style="margin:0" id="howText"></p>
+  </section>
+
+  <section class="card">
+    <h2>Upload your CSV</h2>
+    <p class="hint">CSV file with the columns <b>subscriber_id</b> and <b>IGM_version</b> (IGMv1 or IGMv2). The rows are processed one by one. A row already marked Completed for the selected environment is skipped.</p>
+    <div id="dropCus" class="drop" tabindex="0" role="button" aria-label="Choose the CSV file">
       <span id="txtCus">Drop the file here or <b>click to choose</b></span>
     </div>
     <input id="fileCus" type="file" accept=".csv,text/csv" hidden>
-    <p class="hint" style="margin-top:8px"><span id="sampleUse"><button class="link" id="sampleCus">Use the sample file</button> · </span><button class="link" id="sampleDownload">Download the sample</button></p>
+    <p class="hint" style="margin-top:8px"><button class="link" id="sampleDownload">Download a sample CSV</button><span id="sampleUse"> · <button class="link" id="sampleCus">Use the sample</button></span></p>
 
-    <div id="serverBox" hidden>
-      <div id="keyRow" style="margin-top:14px" hidden>
-        <label for="key">Access key</label>
-        <input id="key" type="password" autocomplete="off">
+    <div id="confirmBox" hidden>
+      <label class="check" id="confirmLabel"><input id="confirm" type="checkbox"><span id="confirmText"></span></label>
+      <div id="prodTypeRow" class="row" hidden>
+        <label for="prodType" class="hint" style="margin:0">Type <b>PROD</b> to enable the Run button:</label>
+        <input id="prodType" type="text" autocomplete="off" spellcheck="false">
       </div>
-      <p class="hint" id="targetInfo" style="margin:12px 0 0"></p>
-      <label class="check" id="dryBox" hidden><input id="dry" type="checkbox"><span>Dry run: only look up the organisations, create nothing</span></label>
-      <label class="check real" id="confirmBox" hidden><input id="confirm" type="checkbox"><span>I understand this creates REAL credentials on the server shown above.</span></label>
     </div>
 
     <div class="row">
-      <div>
-        <label for="stage">Stage filter</label>
-        <select id="stage">
-          <option value="">Any stage</option>
-          <option value="0">0 - Sandbox</option>
-          <option value="1">1 - Staging</option>
-          <option value="2">2 - Pre-Prod</option>
-          <option value="3">3 - Beta-Prod</option>
-        </select>
-      </div>
       <button id="run" class="primary" disabled>Run</button>
     </div>
     <div id="error" class="banner error" hidden></div>
-    <p id="busy" class="hint" style="margin-top:12px" hidden>Processing... this can take a minute. Please do not close this page.</p>
+    <p id="busy" class="hint" style="margin-top:12px" hidden></p>
   </section>
 
   <section class="card" id="sampleCard">
     <details>
-      <summary><b>Built-in sample environment access data</b> (the ids this demo knows about)</summary>
+      <summary><b>Built-in sample data</b> (the subscriber ids this demo knows about)</summary>
       <p class="hint" style="margin-top:10px">Stands in for the <code>environment_access</code> table. Status 1 Active, 4 Whitelisted and 7 Subscribed count as registered.</p>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Subscriber ID</th><th>Organisation ID</th><th>Status</th><th>Stage</th></tr></thead>
+          <thead><tr><th>Subscriber ID</th><th>Organisation ID</th><th>Status</th></tr></thead>
           <tbody id="sampleBody"></tbody>
         </table>
       </div>
@@ -137,7 +133,7 @@
       <div class="tile neutral"><b id="nLeft">0</b>Not processed</div>
       <div class="tile neutral"><b id="nSkip">0</b>Skipped (already Completed)</div>
     </div>
-    <p><a id="download" class="btn" href="#">Download result CSV</a></p>
+    <p><a id="download" class="btn" href="#" hidden>Download result CSV</a></p>
     <div class="table-wrap">
       <table>
         <thead><tr><th>Row</th><th>Subscriber ID</th><th>IGM</th><th>Org ID</th><th>Status</th><th>Message</th></tr></thead>
@@ -148,48 +144,58 @@
 </main>
 
 <script>
+/* ============================== SETTINGS (the only thing to change when deploying) ==============================
+ * Put the address of the API server of each environment below. The page uses the address of the environment that is
+ * selected with the UAT | PROD switch, and never the other one.
+ *
+ *   url: null                       -> this environment is not set up (its side of the switch is disabled)
+ *   url: ''                         -> the API on the same server that serves this page
+ *   url: 'https://host.example'     -> the API at that address (no trailing path)
+ *
+ * If BOTH are null the page runs as a DEMO in the browser with built-in sample data. Nothing real is touched.
+ * Every real run creates real credentials in the selected environment.
+ * The route called is POST <url>/api/plan/create-token-by-subscriber.
+ * ================================================================================================================ */
+var REGISTRATION_CONFIG = {
+  UAT_URL: null,
+  PROD_URL: null,
+};
+</script>
+
+<script>
 /*
- * The logic of the page (all in the browser; no server, database or network):
- *   - the "environment_access table" is the built-in SAMPLE_ACCESS list,
- *   - create-token is a fake with the same rules as script.js mock mode.
- * Same rules as ../script.js: statuses 1/4/7 count as registered, exactly one organisation must match.
+ * The logic of the page. The API does the lookup (subscriber id -> organisation) and creates the token.
+ * This page does everything else: reads the CSV, checks each row, turns IGMv1 / IGMv2 into platform_id 2 / 3,
+ * calls the API once per row, skips finished rows, stops cleanly on a rate limit or network problem,
+ * and fills org_id, status, message and environment into the CSV you download.
  */
 var RegCore = (function () {
   const STATUS_DONE = 'Completed';
   const STATUS_FAIL = 'Failed';
-  const REGISTERED_STATUSES = [1, 4, 7];
-  const STATUS_NAMES = {
-    0: 'Inactive', 1: 'Active', 2: 'Pending', 3: 'Rejected', 4: 'Whitelisted',
-    5: 'Not Whitelisted', 6: 'Not subscribed', 7: 'Subscribed', 8: 'Whitelisted Old',
-  };
-  const MOCK_RATE_LIMIT_ORG = 999999;
+  const REQUEST_TIMEOUT_MS = 30000;
+  const ROUTE = '/api/plan/create-token-by-subscriber';
 
-  /**
-   * Built-in sample "environment_access" rows (made-up data). In the real system this is the database
-   * table; a browser cannot read it, so the static page uses these rows instead.
-   * org = organisation_id, id = subscriber_id (normalised), status = environment_access.status, stage = stage_id.
-   */
+  // Demo data (made up). Keep in sync with MOCK_ACCESS in script.js.
+  // id = subscriber_id, org = organisation_id, status = environment_access.status
   const SAMPLE_ACCESS = [
-    { org: 6533, id: '70001', status: 1, stage: 2 },
-    { org: 6533, id: '70001', status: 7, stage: 0 }, // same org in another stage: still one org
-    { org: 7952, id: '70002', status: 7, stage: 2 },
-    { org: 4900, id: '70003', status: 1, stage: 2 }, // the fake API says "Organisation not found"
-    { org: 2338, id: '70004', status: 4, stage: 2 },
-    { org: 1504, id: '70005', status: 1, stage: 2 },
-    { org: 9217, id: '70006', status: 1, stage: 2 },
-    { org: 1001, id: '70007', status: 2, stage: 2 }, // Pending: not registered
-    { org: 1002, id: '70008', status: 3, stage: 2 }, // Rejected: not registered
-    { org: 1003, id: '70009', status: 1, stage: 2 }, // two organisations share one subscriber id
-    { org: 1004, id: '70009', status: 1, stage: 2 },
-    { org: 6129, id: '70010', status: 7, stage: 2 },
-    { org: 999999, id: '70011', status: 1, stage: 2 }, // makes the fake API answer 429
+    { id: '70001', org: 6533, status: 1 },
+    { id: '70001', org: 6533, status: 7 },
+    { id: '70002', org: 7952, status: 7 },
+    { id: '70003', org: 4900, status: 1 }, // the fake API says "Organisation not found"
+    { id: '70004', org: 2338, status: 4 },
+    { id: '70005', org: 1504, status: 1 },
+    { id: '70006', org: 9217, status: 1 },
+    { id: '70007', org: 1001, status: 2 }, // Pending: not registered
+    { id: '70008', org: 1002, status: 3 }, // Rejected: not registered
+    { id: '70009', org: 1003, status: 1 }, // two organisations share one subscriber id
+    { id: '70009', org: 1004, status: 1 },
+    { id: '70010', org: 6129, status: 7 },
   ];
+  const STATUS_NAMES = {
+    0: 'Inactive', 1: 'Active', 2: 'Pending', 3: 'Rejected', 4: 'Whitelisted', 7: 'Subscribed',
+  };
 
   const text = (v) => String(v === null || v === undefined ? '' : v).trim();
-
-  function normalizeId(value) {
-    return text(value).toLowerCase();
-  }
 
   function toPlatformId(value) {
     const s = text(value).toLowerCase().replace(/[\s_-]+/g, '');
@@ -243,36 +249,98 @@ var RegCore = (function () {
     }).join(',')).join('\r\n') + '\r\n';
   }
 
-  /* ---------------------------------------------------------------- lookup + fake API */
+  /* ---------------------------------------------------------------- backends: one create-token-by-subscriber call */
 
-  /** Same decision as script.js pickOrganisation, on the rows that match one subscriber id. */
-  function pickOrganisation(matches) {
-    if (!matches.length) return { error: 'Subscriber ID not found in environment_access' };
-    const registered = new Set(matches
-      .filter((x) => x.org !== null && REGISTERED_STATUSES.includes(x.status))
-      .map((x) => x.org));
-    if (registered.size === 1) return { orgId: [...registered][0] };
-    if (registered.size > 1) return { error: `Ambiguous: subscriber ID matches several organisations (${[...registered].sort((a, b) => a - b).join(', ')})` };
-    const seen = [...new Set(matches.map((x) => STATUS_NAMES[x.status] || `status ${x.status}`))].join(', ');
-    return { error: `Subscriber ID found, but not registered (status: ${seen})` };
+  /** Demo backend: answers like the real API (lookup rules + token result) from the built-in sample data. */
+  const demoBackend = {
+    createToken(payload) {
+      const fail = (message) => Promise.resolve({ ok: false, kind: 'error', message });
+      let org = payload.organisation_id;
+      if (payload.subscriber_id !== undefined) {
+        const id = text(payload.subscriber_id).toLowerCase();
+        const rows = SAMPLE_ACCESS.filter((x) => x.id === id);
+        if (!rows.length) return fail('Subscriber ID not found');
+        const orgs = [...new Set(rows.filter((x) => [1, 4, 7].includes(x.status)).map((x) => x.org))];
+        if (orgs.length > 1) return fail(`Subscriber ID matches several organisations (${orgs.join(', ')})`);
+        if (!orgs.length) {
+          const seen = [...new Set(rows.map((x) => STATUS_NAMES[x.status]))].join(', ');
+          return fail(`Subscriber ID found, but it is not registered (status: ${seen})`);
+        }
+        [org] = orgs;
+      }
+      if (org % 5 === 0) return fail('Organisation not found');
+      return Promise.resolve({
+        ok: true,
+        kind: org % 7 === 0 ? 'existing' : 'created',
+        message: org % 7 === 0 ? 'Token already existed' : 'Token created',
+        organisationId: org,
+      });
+    },
+  };
+
+  function readableError(body) {
+    const msg = body && (body.error && body.error.message !== undefined ? body.error.message : (body.message !== undefined ? body.message : body.error));
+    if (!msg) return 'Something went wrong.';
+    if (typeof msg === 'string') return msg;
+    if (msg.err_msg) return msg.err_msg;
+    return Object.values(msg).filter((v) => typeof v === 'string').join(', ') || 'Something went wrong.';
   }
 
-  /** Fake create-token, same rules as script.js mock mode. Never touches a network. */
-  function fakeCreateToken(orgId, platformId) {
-    if (![2, 3].includes(platformId)) return { ok: false, kind: 'error', message: 'Mock only accepts platform_id 2 or 3' };
-    if (orgId === MOCK_RATE_LIMIT_ORG) return { ok: false, kind: 'rate-limit', message: 'Rate limited (HTTP 429)' };
-    if (orgId % 5 === 0) return { ok: false, kind: 'error', message: 'Organisation not found' };
-    if (orgId % 7 === 0) return { ok: true, kind: 'existing', message: 'Token already existed' };
-    return { ok: true, kind: 'created', message: 'Token created' };
-  }
+  const HALT_MESSAGES = {
+    'rate-limit': 'The API rate limit was reached (HTTP 429). Try again later.',
+    timeout: 'A request timed out, so its outcome is unknown. Check that organisation before retrying.',
+    network: 'Could not reach the API. Check the address, that the API allows this page (CORS), and that http / https match.',
+    'bad-endpoint': 'The API has no create-token-by-subscriber endpoint at this address (HTTP 404). Check the address.',
+  };
+  const HALT_KINDS = ['rate-limit', 'timeout', 'network', 'bad-endpoint'];
 
   /**
-   * Processes the customer CSV text. Returns { csv, rows, counts, halted }.
-   * onRow(rowResult) is called after each row so the page can show live progress.
+   * API backend for one environment address. Resolves { ok:true, kind, message, organisationId } or
+   * { ok:false, kind, message }. Credentials in the reply are ignored on purpose.
    */
-  async function processCustomers(csvText, accessRows, opts, onRow) {
-    const maxRows = opts.maxRows || 100;
-    const stage = opts.stage === undefined ? null : opts.stage;
+  function apiBackend(baseUrl) {
+    const base = String(baseUrl).replace(/\/+$/, '');
+    return {
+      createToken(payload) {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+        return fetch(`${base}${ROUTE}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+          signal: controller.signal,
+        }).then((res) => res.text().then((raw) => {
+          let body = null;
+          try { body = JSON.parse(raw); } catch (e) { /* not JSON */ }
+          if (res.status === 429) return { ok: false, kind: 'rate-limit', message: HALT_MESSAGES['rate-limit'] };
+          if (res.status === 404 && !body) return { ok: false, kind: 'bad-endpoint', message: HALT_MESSAGES['bad-endpoint'] };
+          if (!body || typeof body !== 'object') return { ok: false, kind: 'bad-response', message: `Unexpected response from the API (HTTP ${res.status})` };
+          if (body.status === 'success') {
+            const data = body.data || {};
+            const existing = /already exists/i.test(data.message || '');
+            return {
+              ok: true,
+              kind: existing ? 'existing' : 'created',
+              message: existing ? 'Token already existed' : 'Token created',
+              organisationId: data.organisation_id,
+            };
+          }
+          return { ok: false, kind: 'error', message: readableError(body) };
+        })).catch((err) => (err && err.name === 'AbortError'
+          ? { ok: false, kind: 'timeout', message: HALT_MESSAGES.timeout }
+          : { ok: false, kind: 'network', message: HALT_MESSAGES.network }))
+          .then((r) => { clearTimeout(timer); return r; });
+      },
+    };
+  }
+
+  /* ---------------------------------------------------------------- processing */
+
+  /**
+   * Processes the CSV text row by row for one environment. Returns { csv, rows, counts, halted }.
+   * onRow(rowResult, counts) is called after each row so the page can show live progress.
+   */
+  async function processCustomers(csvText, backend, environment, onRow) {
     const table = parseCsv(csvText);
     if (!table.length) throw new Error('The CSV file is empty.');
 
@@ -280,9 +348,9 @@ var RegCore = (function () {
     const cols = {};
     header.forEach((h, i) => { if (h) cols[h.toLowerCase()] = i; });
     if (cols.igm_version === undefined || (cols.subscriber_id === undefined && cols.org_id === undefined)) {
-      throw new Error(`Row 1 must contain the headers subscriber_id (or org_id) and IGM_version. Found: ${header.filter(Boolean).join(', ') || '(nothing)'}`);
+      throw new Error(`Row 1 must contain the headers subscriber_id and IGM_version. Found: ${header.filter(Boolean).join(', ') || '(nothing)'}`);
     }
-    ['org_id', 'status', 'message'].forEach((name) => {
+    ['org_id', 'status', 'message', 'environment'].forEach((name) => {
       if (cols[name] !== undefined) return;
       cols[name] = header.length;
       header.push(name);
@@ -299,101 +367,172 @@ var RegCore = (function () {
       const verText = get(r, 'igm_version');
       const statusText = get(r, 'status');
       if (!idText && !orgText && !verText && !statusText) continue; // blank line
-      rows.push({ r, idText, orgText, verText, statusText });
+      rows.push({
+        r, idText, orgText, verText, statusText, envText: get(r, 'environment'),
+      });
     }
-    const pending = rows.filter((x) => x.statusText.toLowerCase() !== STATUS_DONE.toLowerCase());
+    // Completed in this environment (or with no environment recorded) means done. Completed in the OTHER
+    // environment does not: the same file can be run in UAT first and in PROD afterwards.
+    const isDone = (x) => x.statusText.toLowerCase() === STATUS_DONE.toLowerCase()
+      && (!x.envText || x.envText.toUpperCase() === environment.toUpperCase());
+    const pending = rows.filter((x) => !isDone(x));
 
     const results = [];
-    const counts = { completed: 0, failed: 0, notProcessed: 0, skipped: rows.length - pending.length };
-    let attempted = 0;
+    const counts = {
+      completed: 0, failed: 0, notProcessed: 0, skipped: rows.length - pending.length,
+    };
     let halted = '';
 
-    const record = (row, orgId, status, message) => {
+    const record = (row, status, message, orgId) => {
       set(row.r, 'status', status);
       set(row.r, 'message', message);
-      if (orgId !== null && !row.orgText) set(row.r, 'org_id', String(orgId));
+      set(row.r, 'environment', environment);
+      // The org id of a previous run belongs to another environment's database: replace it, never trust it.
+      if (orgId) set(row.r, 'org_id', String(orgId));
+      else if (!row.idText) { /* org_id-only row: keep the org id the user gave */ } else set(row.r, 'org_id', '');
       if (status === STATUS_DONE) counts.completed += 1; else counts.failed += 1;
-      const res = { row: row.r + 1, subscriber_id: row.idText, igm_version: row.verText, org_id: orgId === null ? row.orgText : String(orgId), status, message };
+      const res = {
+        row: row.r + 1,
+        subscriber_id: row.idText,
+        igm_version: row.verText,
+        org_id: orgId ? String(orgId) : (row.idText ? '' : row.orgText),
+        status,
+        message,
+      };
       results.push(res);
-      if (onRow) onRow(res);
+      if (onRow) onRow(res, counts);
     };
 
     for (let i = 0; i < pending.length; i += 1) {
       const row = pending[i];
-      let orgId = toOrgId(row.orgText);
+
+      // Checks the API does not do: what to send, and whether the row is usable at all.
       const platformId = toPlatformId(row.verText);
+      const orgId = toOrgId(row.orgText);
+      const payload = {};
+      if (row.idText) payload.subscriber_id = row.idText;
+      else if (row.orgText) {
+        if (orgId === null) { record(row, STATUS_FAIL, 'invalid org_id', null); continue; }
+        payload.organisation_id = orgId;
+      } else { record(row, STATUS_FAIL, cols.subscriber_id !== undefined ? 'subscriber_id is empty' : 'org_id is empty', null); continue; }
+      if (platformId === null) { record(row, STATUS_FAIL, 'invalid IGM_version (use IGMv1 or IGMv2)', null); continue; }
+      payload.platform_id = platformId;
 
-      if (!row.orgText && row.idText) {
-        const key = normalizeId(row.idText);
-        const matches = accessRows.filter((x) => x.id === key && (stage === null || x.stage === stage));
-        const found = pickOrganisation(matches);
-        if (found.error) { record(row, null, STATUS_FAIL, found.error); continue; }
-        orgId = found.orgId;
-      }
-      if (orgId === null || platformId === null) {
-        const noOrg = !row.orgText && !row.idText && cols.subscriber_id !== undefined ? 'subscriber_id is empty' : 'invalid org_id';
-        record(row, null, STATUS_FAIL, orgId === null ? noOrg : 'invalid IGM_version (use IGMv1 or IGMv2)');
-        continue;
-      }
-      if (attempted >= maxRows) {
-        counts.notProcessed += pending.length - i;
-        halted = `Reached the max rows limit (${maxRows}); the remaining rows were left untouched for the next run.`;
-        break;
-      }
-
-      attempted += 1;
-      const result = fakeCreateToken(orgId, platformId);
-      record(row, orgId, result.ok ? STATUS_DONE : STATUS_FAIL, result.message);
-      if (result.kind === 'rate-limit') {
-        halted = 'Server rate limit reached (the API allows 20 requests per hour per IP).';
-        counts.notProcessed += pending.length - i - 1;
-        break;
-      }
       // eslint-disable-next-line no-await-in-loop
-      if (opts.pauseMs) await new Promise((res) => { setTimeout(res, opts.pauseMs); });
+      const result = await backend.createToken(payload);
+      if (result.ok) {
+        record(row, STATUS_DONE, result.message, result.organisationId);
+      } else if (HALT_KINDS.includes(result.kind)) {
+        // The outcome of this row is unknown (or the API refuses everything): leave it empty for the next run.
+        halted = result.message;
+        counts.notProcessed += pending.length - i;
+        break;
+      } else {
+        record(row, STATUS_FAIL, result.message, null);
+      }
     }
     return { csv: toCsv(table), rows: results, counts, halted };
   }
 
-  return { SAMPLE_ACCESS, processCustomers, STATUS_NAMES };
+  const SAMPLE_CSV = [
+    'subscriber_id,IGM_version',
+    '70001,IGMv2',
+    ' 70002 ,IGMv1',
+    '70003,IGMv1',
+    '70004,igmv2',
+    '70005,IGMv1',
+    '79999,IGMv2',
+    '70007,IGMv1',
+    '70008,IGMv2',
+    '70009,IGMv1',
+    '70010,IGMv9',
+    ',IGMv1',
+    '70006,IGMv2',
+  ].join('\n') + '\n';
+
+  return {
+    SAMPLE_ACCESS, SAMPLE_CSV, STATUS_NAMES, demoBackend, apiBackend, processCustomers,
+  };
 }());
 </script>
+
 <script>
 (function () {
   var $ = function (id) { return document.getElementById(id); };
-  var SAMPLE_CSV = [
-    "subscriber_id,IGM_version",
-    "70001,IGMv2",
-    " 70002 ,IGMv1",
-    "70003,IGMv1",
-    "70004,igmv2",
-    "70005,IGMv1",
-    "79999,IGMv2",
-    "70007,IGMv1",
-    "70008,IGMv2",
-    "70009,IGMv1",
-    "70010,IGMv9",
-    ",IGMv1",
-    "70006,IGMv2",
-    "70011,IGMv1",
-    "70001,IGMv1"
-  ].join('\n') + '\n';
-  var MAX_ROWS = 100; // rows processed per file
-  $('maxRowsInfo').textContent = MAX_ROWS;
+  var cfg = window.REGISTRATION_CONFIG || {};
+  var urls = { UAT: cfg.UAT_URL, PROD: cfg.PROD_URL };
+  var isSet = function (env) { return typeof urls[env] === 'string'; };
+  var demo = !isSet('UAT') && !isSet('PROD');
+  var env = isSet('UAT') ? 'UAT' : (isSet('PROD') ? 'PROD' : 'DEMO'); // starts on UAT, never on PROD by itself
+  var running = false;
   var cus = null;
   var blobUrl = null;
 
   function showError(msg) { $('error').textContent = msg; $('error').hidden = !msg; }
-  var server = null; // set when the page is served by server.js; stays null on plain static hosting (demo)
-  function refresh() {
-    var blocked = server && (server.disabled || (server.needsKey && !$('key').value) ||
-      (server.mode === 'real' && !$('dry').checked && !$('confirm').checked));
-    $('run').disabled = !cus || !!blocked;
+
+  function backend() {
+    return demo ? RegCore.demoBackend : RegCore.apiBackend(urls[env]);
   }
 
-  function setFile(name, buffer) {
+  function refresh() {
+    var ok = !!cus && !running;
+    if (!demo) {
+      ok = ok && $('confirm').checked;
+      if (env === 'PROD') ok = ok && $('prodType').value.trim() === 'PROD';
+    }
+    $('run').disabled = !ok;
+    $('envUat').disabled = running || !isSet('UAT');
+    $('envProd').disabled = running || !isSet('PROD');
+  }
+
+  /* ---------- environment switch ---------- */
+  function applyEnv() {
+    var prod = env === 'PROD';
+    document.body.className = prod ? 'prod' : '';
+    $('envUat').setAttribute('aria-checked', String(env === 'UAT'));
+    $('envProd').setAttribute('aria-checked', String(prod));
+    if (demo) return;
+    var shown = urls[env] === '' ? window.location.host + ' (this server)' : urls[env];
+    $('modeBadge').textContent = env + (prod ? ' - REAL CREDENTIALS' : '');
+    $('modeBadge').className = 'badge' + (prod ? ' prod' : '');
+    $('envInfo').textContent = 'API: ' + shown;
+    $('confirmLabel').className = 'check' + (prod ? ' prod' : '');
+    $('confirmText').textContent = 'I understand this creates REAL credentials in ' + env + ' (' + shown + ').';
+    $('prodTypeRow').hidden = !prod;
+    $('confirm').checked = false;
+    $('prodType').value = '';
+    $('results').hidden = true;
     showError('');
-    cus = { name: name, text: buffer };
+    refresh();
+  }
+
+  function pick(next) {
+    if (running || next === env || !isSet(next)) return;
+    env = next;
+    applyEnv();
+  }
+
+  if (demo) {
+    $('howText').textContent = 'Upload a CSV with a subscriber ID and an IGM version for each customer. The organisation is found from the subscriber ID in the built-in sample data, then a fake create-token call is made. No server, database or real API is used. You get the CSV back with org_id, status, message and environment filled in. To use real environments, put their addresses in the settings at the top of this file.';
+  } else {
+    $('envCard').hidden = false;
+    $('confirmBox').hidden = false;
+    $('sampleUse').hidden = true;
+    $('sampleCard').hidden = true;
+    $('envUat').title = isSet('UAT') ? '' : 'UAT address is not set';
+    $('envProd').title = isSet('PROD') ? '' : 'PROD address is not set';
+    $('howText').textContent = 'Upload a CSV with a subscriber ID and an IGM version for each customer. Each row is sent to the API of the selected environment, which finds the organisation for the subscriber ID and creates the credentials for that IGM version. You get the CSV back with org_id, status, message and environment filled in.';
+    $('envUat').addEventListener('click', function () { pick('UAT'); });
+    $('envProd').addEventListener('click', function () { pick('PROD'); });
+    $('confirm').addEventListener('change', refresh);
+    $('prodType').addEventListener('input', refresh);
+    applyEnv();
+  }
+
+  /* ---------- file handling ---------- */
+  function setFile(name, content) {
+    showError('');
+    cus = { name: name, text: content };
     $('txtCus').textContent = name;
     $('dropCus').classList.add('ready');
     refresh();
@@ -402,35 +541,33 @@ var RegCore = (function () {
   function readFile(f) {
     if (!f) return;
     if (!/\.csv$/i.test(f.name)) { showError('Please choose a .csv file.'); return; }
-    if (f.size > 2 * 1024 * 1024) { showError('File is too large (max 2 MB).'); return; }
+    if (f.size > 5 * 1024 * 1024) { showError('File is too large (max 5 MB).'); return; }
     var fr = new FileReader();
     fr.onload = function () { setFile(f.name, fr.result); };
     fr.readAsText(f);
   }
 
-  (function wire() {
-    var drop = $('dropCus'), input = $('fileCus');
-    drop.addEventListener('click', function () { input.click(); });
-    drop.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); input.click(); } });
-    drop.addEventListener('dragover', function (e) { e.preventDefault(); drop.classList.add('over'); });
-    drop.addEventListener('dragleave', function () { drop.classList.remove('over'); });
-    drop.addEventListener('drop', function (e) { e.preventDefault(); drop.classList.remove('over'); readFile(e.dataTransfer.files[0]); });
-    input.addEventListener('change', function () { readFile(input.files[0]); });
-    $('sampleCus').addEventListener('click', function () { setFile('sample_customers.csv (sample)', SAMPLE_CSV); });
-    $('sampleDownload').addEventListener('click', function () {
-      var a = document.createElement('a');
-      a.href = URL.createObjectURL(new Blob([SAMPLE_CSV], { type: 'text/csv' }));
-      a.download = 'sample_customers.csv';
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
-    });
-  }());
+  var drop = $('dropCus'), input = $('fileCus');
+  drop.addEventListener('click', function () { input.click(); });
+  drop.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); input.click(); } });
+  drop.addEventListener('dragover', function (e) { e.preventDefault(); drop.classList.add('over'); });
+  drop.addEventListener('dragleave', function () { drop.classList.remove('over'); });
+  drop.addEventListener('drop', function (e) { e.preventDefault(); drop.classList.remove('over'); readFile(e.dataTransfer.files[0]); });
+  input.addEventListener('change', function () { readFile(input.files[0]); });
+  $('sampleCus').addEventListener('click', function () { setFile('sample_customers.csv (sample)', RegCore.SAMPLE_CSV); });
+  $('sampleDownload').addEventListener('click', function () {
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([RegCore.SAMPLE_CSV], { type: 'text/csv' }));
+    a.download = 'sample_customers.csv';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  });
 
-  // Show the built-in sample table.
+  /* ---------- built-in sample table (demo only) ---------- */
   RegCore.SAMPLE_ACCESS.forEach(function (x) {
     var tr = document.createElement('tr');
-    [x.id, String(x.org), (RegCore.STATUS_NAMES[x.status] || x.status) + ' (' + x.status + ')', String(x.stage)].forEach(function (v) {
+    [x.id, String(x.org), (RegCore.STATUS_NAMES[x.status] || x.status) + ' (' + x.status + ')'].forEach(function (v) {
       var td = document.createElement('td');
       td.textContent = v;
       tr.appendChild(td);
@@ -438,6 +575,7 @@ var RegCore = (function () {
     $('sampleBody').appendChild(tr);
   });
 
+  /* ---------- results ---------- */
   function cell(tr, value, cls) {
     var td = document.createElement('td');
     if (cls) td.className = cls;
@@ -446,7 +584,7 @@ var RegCore = (function () {
     return td;
   }
 
-  function addRow(r) {
+  function addRow(r, counts) {
     var tr = document.createElement('tr');
     cell(tr, String(r.row));
     cell(tr, r.subscriber_id, 'url');
@@ -458,91 +596,44 @@ var RegCore = (function () {
     cell(tr, '').appendChild(pill);
     cell(tr, r.message);
     $('tbody').appendChild(tr);
-  }
-
-  function save(blob, name) {
-    if (blobUrl) URL.revokeObjectURL(blobUrl);
-    blobUrl = URL.createObjectURL(blob);
-    $('download').href = blobUrl;
-    $('download').download = name;
-  }
-
-  function show(res) {
-    var c = res.counts || res.summary;
-    $('nOk').textContent = c.completed;
-    $('nBad').textContent = c.failed;
-    $('nLeft').textContent = c.notProcessed;
-    $('nSkip').textContent = c.skipped;
-    var note = res.halted ? res.halted + ' Rows after the stop were left empty; run again later to pick them up.' : '';
-    if (res.dryRun) note = 'Dry run: nothing was created. Rows marked "Dry run OK" are ready for a real run. ' + note;
-    $('halted').textContent = note;
-    $('halted').hidden = !note;
-    $('tbody').textContent = '';
-    res.rows.forEach(addRow);
-    // BOM first so Excel reads the file as UTF-8.
-    save(new Blob(['\uFEFF' + res.csv], { type: 'text/csv;charset=utf-8' }),
-      cus.name.replace(/ \(sample\)$/, '').replace(/\.csv$/i, '') + '.result.csv');
-    $('results').hidden = false;
-  }
-
-  function runDemo() {
-    var stage = $('stage').value === '' ? null : Number($('stage').value);
-    return RegCore.processCustomers(cus.text, RegCore.SAMPLE_ACCESS, { maxRows: MAX_ROWS, stage: stage }).then(show);
-  }
-
-  function runOnServer() {
-    var q = '?dryRun=' + ($('dry').checked ? 'yes' : 'no') + '&confirm=' + ($('confirm').checked ? 'yes' : 'no') +
-      ($('stage').value === '' ? '' : '&stage=' + $('stage').value);
-    var h = { 'Content-Type': 'text/csv' };
-    if (server.needsKey) h['X-Access-Key'] = $('key').value;
-    return fetch('/api/run' + q, { method: 'POST', headers: h, body: cus.text })
-      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, body: j }; }); })
-      .then(function (res) {
-        if (!res.ok) throw new Error(res.body.error || 'The run failed.');
-        show(res.body);
-      });
+    $('nOk').textContent = counts.completed;
+    $('nBad').textContent = counts.failed;
+    $('busy').textContent = 'Processed ' + (counts.completed + counts.failed) + ' rows in ' + env + '... please do not close this page.';
   }
 
   $('run').addEventListener('click', function () {
     showError('');
-    $('run').disabled = true;
-    $('results').hidden = true;
-    $('busy').hidden = false;
-    (server ? runOnServer() : runDemo())
-      .catch(function (err) { showError(err && err.message ? err.message : 'Something went wrong.'); })
-      .then(function () { $('busy').hidden = true; refresh(); });
-  });
-
-  ['key', 'dry', 'confirm'].forEach(function (id) {
-    $(id).addEventListener(id === 'key' ? 'input' : 'change', refresh);
-  });
-
-  // When served by server.js, run on the server (real or mock lookup). On plain static hosting this
-  // call fails and the page stays a browser-only demo.
-  fetch('/api/info').then(function (r) {
-    if (!r.ok) throw new Error('no server');
-    return r.json();
-  }).then(function (info) {
-    if (!info || typeof info.mode !== 'string') throw new Error('no server');
-    server = info;
-    MAX_ROWS = info.maxRows;
-    $('maxRowsInfo').textContent = MAX_ROWS;
-    var real = info.mode === 'real';
-    $('modeBadge').textContent = real ? 'REAL MODE' : 'MOCK MODE (safe test)';
-    $('modeBadge').className = 'badge' + (real ? ' real' : '');
-    $('serverBox').hidden = false;
-    $('keyRow').hidden = !info.needsKey;
-    $('dryBox').hidden = !real;
-    $('confirmBox').hidden = !real;
-    $('targetInfo').textContent = 'Server: ' + info.target;
-    $('howText').textContent = real
-      ? 'Upload a CSV file with a subscriber ID and an IGM version for each customer. The organisation is looked up from the subscriber ID in the environment access table, then API credentials are created for that IGM version on the server shown below. You get the CSV back with org_id, status and message filled in. Tick "Dry run" first to check the lookup without creating anything.'
-      : 'Upload a CSV file with a subscriber ID and an IGM version for each customer. The server looks up the organisation in a built-in sample table and makes a fake create-token call; nothing real is touched.';
-    $('sampleUse').hidden = real;
-    $('sampleCard').hidden = real;
-    if (info.disabled) showError('Real mode is disabled on this server (no access key configured). Contact the administrator.');
+    running = true;
     refresh();
-  }).catch(function () { /* static hosting: keep the demo */ });
+    $('results').hidden = false;
+    $('download').hidden = true;
+    $('tbody').textContent = '';
+    $('halted').hidden = true;
+    ['nOk', 'nBad', 'nLeft', 'nSkip'].forEach(function (id) { $(id).textContent = '0'; });
+    $('busy').hidden = false;
+    $('busy').textContent = 'Processing in ' + env + '... please do not close this page.';
+    var runEnv = env; // the environment cannot change while a run is going (the switch is locked)
+
+    RegCore.processCustomers(cus.text, backend(), runEnv, addRow)
+      .then(function (res) {
+        $('nOk').textContent = res.counts.completed;
+        $('nBad').textContent = res.counts.failed;
+        $('nLeft').textContent = res.counts.notProcessed;
+        $('nSkip').textContent = res.counts.skipped;
+        if (res.halted) {
+          $('halted').textContent = 'Stopped early: ' + res.halted + ' Rows after the stop were left empty; run again later to pick them up.';
+          $('halted').hidden = false;
+        }
+        if (blobUrl) URL.revokeObjectURL(blobUrl);
+        // BOM first so Excel reads the file as UTF-8.
+        blobUrl = URL.createObjectURL(new Blob(['﻿' + res.csv], { type: 'text/csv;charset=utf-8' }));
+        $('download').href = blobUrl;
+        $('download').download = cus.name.replace(/ \(sample\)$/, '').replace(/\.csv$/i, '') + '.result.' + runEnv.toLowerCase() + '.csv';
+        $('download').hidden = false;
+      })
+      .catch(function (err) { $('results').hidden = true; showError(err && err.message ? err.message : 'Something went wrong.'); })
+      .then(function () { running = false; $('busy').hidden = true; refresh(); });
+  });
 })();
 </script>
 </body>
