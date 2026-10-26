@@ -1,18 +1,13 @@
 {
   "name": "registration-automation",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "private": true,
-  "description": "Registration automation: upload a CSV of subscriber ids; each row is sent to the onboarding API's create-token-by-subscriber route (UAT or PROD), which finds the organisation and creates the IGM token; download the result. A static web page (npm start) and a command-line script (npm run cli). Demo/mock mode by default.",
-  "main": "script.js",
+  "description": "Hosted page: upload a CSV of subscriber ids; each row is sent to the onboarding API's create-token-by-subscriber route (UAT or PROD) and the result is written back to the CSV.",
+  "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "cli": "node script.js",
-    "help": "node script.js --help"
+    "start": "node server.js"
   },
   "engines": {
     "node": ">=18"
-  },
-  "dependencies": {
-    "exceljs": "^4.4.0"
   }
 }
