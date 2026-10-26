@@ -264,7 +264,6 @@ var RegCore = (function () {
     var shown = urls[env] === '' ? window.location.host + ' (this server)' : urls[env];
     $('modeBadge').textContent = env + (prod ? ' - REAL CREDENTIALS' : '');
     $('modeBadge').className = 'badge' + (prod ? ' prod' : '');
-    $('envInfo').textContent = 'API: ' + shown;
     $('confirmLabel').className = 'check' + (prod ? ' prod' : '');
     $('confirmText').textContent = 'I understand this creates REAL credentials in ' + env + ' (' + shown + ').';
     $('prodTypeRow').hidden = !prod;
@@ -293,7 +292,6 @@ var RegCore = (function () {
     $('notConfigured').hidden = false;
     $('modeBadge').textContent = 'NOT SET UP';
     $('modeBadge').className = 'badge off';
-    $('envInfo').textContent = 'No API address is set.';
     $('confirmText').textContent = 'I understand this creates REAL credentials.';
     refresh();
   }

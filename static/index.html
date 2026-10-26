@@ -36,6 +36,14 @@
   .drop { border: 2px dashed var(--line); border-radius: 12px; padding: 22px 16px; text-align: center; cursor: pointer; color: var(--muted); }
   .drop.over, .drop:focus-visible { border-color: var(--accent); color: var(--text); outline: none; }
   .drop.ready { border-style: solid; color: var(--text); }
+  .drop-icon { display: block; margin: 0 auto; width: 44px; height: 44px; }
+  .drop:hover .drop-icon, .drop.over .drop-icon { color: var(--accent); }
+  .drop-name { display: block; margin-top: 8px; font-weight: 600; color: var(--text); word-break: break-all; }
+  .drop-name:empty { display: none; }
+  .steps { margin: 0 0 14px; padding-left: 20px; color: var(--muted); font-size: 13px; }
+  .steps li { margin: 4px 0; }
+  .cta-row { display: flex; justify-content: center; margin-top: 20px; }
+  button.cta { padding: 12px 56px; font-size: 16px; border-radius: 10px; }
   .row { display: flex; flex-wrap: wrap; gap: 16px; align-items: end; margin-top: 14px; }
   button, a.btn { display: inline-block; padding: 9px 16px; border-radius: 8px; border: 1px solid var(--line); background: var(--card); color: var(--text); font: inherit; font-weight: 600; cursor: pointer; text-decoration: none; }
   button.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
@@ -84,20 +92,21 @@
       <button type="button" role="radio" class="uat" id="envUat" aria-checked="true">UAT</button>
       <button type="button" role="radio" class="prod" id="envProd" aria-checked="false">PROD</button>
     </div>
-    <p class="hint" id="envInfo" style="margin:10px 0 0"></p>
   </section>
 
   <section class="card">
     <h2>Upload your CSV</h2>
-    <p class="hint">
-      One row per customer with the columns <b>subscriber_id</b> and <b>IGM_version</b> (IGMv1 or IGMv2).
-      Each row is sent to the API of the selected environment, which finds the organisation for the subscriber ID and
-      creates the credentials for that IGM version. Rows are processed one by one. A row already marked Completed for
-      the selected environment is skipped. You get the CSV back with <b>org_id</b>, <b>status</b>, <b>message</b> and
-      <b>environment</b> filled in.
-    </p>
-    <div id="dropCus" class="drop" tabindex="0" role="button" aria-label="Choose the CSV file">
-      <span id="txtCus">Drop the file here or <b>click to choose</b></span>
+    <ul class="steps">
+      <li>One row per customer, with the columns <b>subscriber_id</b> and <b>IGM_version</b> (IGMv1 or IGMv2).</li>
+      <li>Each row is sent to the API of the selected environment, which finds the organisation for the subscriber ID and creates the credentials for that IGM version.</li>
+      <li>Rows are processed one by one. A row already marked Completed for the selected environment is skipped.</li>
+      <li>You get the CSV back with <b>org_id</b>, <b>status</b>, <b>message</b> and <b>environment</b> filled in.</li>
+    </ul>
+    <div id="dropCus" class="drop" tabindex="0" role="button" aria-label="Upload a CSV file" title="Click to choose a CSV file, or drop it here">
+      <svg class="drop-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/>
+      </svg>
+      <span id="txtCus" class="drop-name"></span>
     </div>
     <input id="fileCus" type="file" accept=".csv,text/csv" hidden>
     <p class="hint" style="margin-top:8px"><button class="link" id="templateDownload">Download an empty CSV template</button></p>
@@ -108,8 +117,8 @@
       <input id="prodType" type="text" autocomplete="off" spellcheck="false">
     </div>
 
-    <div class="row">
-      <button id="run" class="primary" disabled>Run</button>
+    <div class="cta-row">
+      <button id="run" class="primary cta" disabled>Run</button>
     </div>
     <div id="error" class="banner error" hidden></div>
     <p id="busy" class="hint" style="margin-top:12px" hidden></p>
