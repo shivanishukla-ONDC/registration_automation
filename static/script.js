@@ -22,8 +22,8 @@ var RegCore = (function () {
 
   function toPlatformId(value) {
     const s = text(value).toLowerCase().replace(/[\s_-]+/g, '');
-    if (s === 'igmv1' || s === 'v1' || s === '1') return 2;
-    if (s === 'igmv2' || s === 'v2' || s === '2') return 3;
+    if (s === 'igmv1' || s === 'v1' || s === '2') return 2;
+    if (s === 'igmv2' || s === 'v2' || s === '3') return 3;
     return null;
   }
 
@@ -143,9 +143,6 @@ var RegCore = (function () {
     const header = table[0].map((h) => text(h));
     const cols = {};
     header.forEach((h, i) => { if (h) cols[h.toLowerCase()] = i; });
-    // the old header names still work
-    if (cols[ID_HEADER.toLowerCase()] === undefined && cols.subscriber_id !== undefined) cols[ID_HEADER.toLowerCase()] = cols.subscriber_id;
-    if (cols[VERSION_HEADER.toLowerCase()] === undefined && cols.igm_version !== undefined) cols[VERSION_HEADER.toLowerCase()] = cols.igm_version;
     const idKey = ID_HEADER.toLowerCase();
     const versionKey = VERSION_HEADER.toLowerCase();
     if (cols[versionKey] === undefined || (cols[idKey] === undefined && cols.org_id === undefined)) {
@@ -216,7 +213,7 @@ var RegCore = (function () {
         if (orgId === null) { record(row, STATUS_FAIL, 'invalid org_id', null); continue; }
         payload.organisation_id = orgId;
       } else { record(row, STATUS_FAIL, cols[idKey] !== undefined ? `"${ID_HEADER}" is empty` : 'org_id is empty', null); continue; }
-      if (platformId === null) { record(row, STATUS_FAIL, `invalid "${VERSION_HEADER}" (use 1 or 2, or IGMv1 or IGMv2)`, null); continue; }
+      if (platformId === null) { record(row, STATUS_FAIL, `invalid "${VERSION_HEADER}" (use IGMv1 or IGMv2)`, null); continue; }
       payload.platform_id = platformId;
 
       // eslint-disable-next-line no-await-in-loop
