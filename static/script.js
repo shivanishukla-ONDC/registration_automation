@@ -266,11 +266,10 @@ var RegCore = (function () {
     $('envUat').setAttribute('aria-checked', String(env === 'UAT'));
     $('envProd').setAttribute('aria-checked', String(prod));
     $('envSwitch').setAttribute('data-env', prod ? 'prod' : 'uat'); // moves the sliding pill
-    var shown = urls[env] === '' ? window.location.host + ' (this server)' : urls[env];
     $('modeBadge').textContent = env + (prod ? ' - REAL CREDENTIALS' : '');
     $('modeBadge').className = 'badge' + (prod ? ' prod' : '');
     $('confirmLabel').className = 'check' + (prod ? ' prod' : '');
-    $('confirmText').textContent = 'I understand this creates REAL credentials in ' + env + ' (' + shown + ').';
+    $('confirmText').textContent = 'I understand this creates REAL credentials in ' + env + '.';
     $('prodTypeRow').hidden = !prod;
     $('confirm').checked = false;
     $('prodType').value = '';
