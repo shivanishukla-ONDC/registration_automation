@@ -28,11 +28,14 @@
   .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
   .card h2 { font-size: 16px; margin: 0 0 4px; }
   .hint { color: var(--muted); font-size: 13px; margin: 0 0 12px; }
-  .switch { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; padding: 3px; background: var(--bg); }
-  .switch button { border: none; background: transparent; padding: 7px 22px; border-radius: 999px; color: var(--muted); cursor: pointer; font: inherit; font-weight: 700; }
-  .switch button[aria-checked="true"].uat { background: var(--ok); color: var(--card); }
-  .switch button[aria-checked="true"].prod { background: var(--bad); color: var(--card); }
+  /* UAT | PROD slide switch: a coloured pill (.thumb) glides between the two labels */
+  .switch { position: relative; display: inline-grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--line); border-radius: 999px; padding: 3px; background: var(--bg); }
+  .switch .thumb { position: absolute; top: 3px; bottom: 3px; left: 3px; width: calc(50% - 3px); border-radius: 999px; background: var(--ok); transition: transform .25s ease, background-color .25s ease; }
+  .switch[data-env="prod"] .thumb { transform: translateX(100%); background: var(--bad); }
+  .switch button { position: relative; z-index: 1; min-width: 96px; border: none; background: transparent; padding: 7px 22px; border-radius: 999px; color: var(--muted); cursor: pointer; font: inherit; font-weight: 700; transition: color .25s ease; }
+  .switch button[aria-checked="true"] { color: var(--card); }
   .switch button:disabled { opacity: .4; cursor: not-allowed; }
+  @media (prefers-reduced-motion: reduce) { .switch .thumb, .switch button { transition: none; } }
   .drop { border: 2px dashed var(--line); border-radius: 12px; padding: 22px 16px; text-align: center; cursor: pointer; color: var(--muted); }
   .drop.over, .drop:focus-visible { border-color: var(--accent); color: var(--text); outline: none; }
   .drop.ready { border-style: solid; color: var(--text); }
@@ -88,7 +91,8 @@
   <section class="card">
     <h2>Environment</h2>
     <p class="hint">Choose where the tokens are created. Everything below uses the address of the environment you pick.</p>
-    <div class="switch" role="radiogroup" aria-label="Environment">
+    <div class="switch" id="envSwitch" data-env="uat" role="radiogroup" aria-label="Environment">
+      <span class="thumb" aria-hidden="true"></span>
       <button type="button" role="radio" class="uat" id="envUat" aria-checked="true">UAT</button>
       <button type="button" role="radio" class="prod" id="envProd" aria-checked="false">PROD</button>
     </div>
@@ -97,7 +101,7 @@
   <section class="card">
     <h2>Upload your CSV</h2>
     <ul class="steps">
-      <li>One row per customer, with the columns <b>subscriber_id</b> and <b>IGM_version</b> (IGMv1 or IGMv2).</li>
+      <li>One row per customer, with the columns <b>Share your pre production subscriber ID/IDs</b> and <b>Share the IGM version</b> (1 or 2, or IGMv1 or IGMv2).</li>
       <li>Each row is sent to the API of the selected environment, which finds the organisation for the subscriber ID and creates the credentials for that IGM version.</li>
       <li>Rows are processed one by one. A row already marked Completed for the selected environment is skipped.</li>
       <li>You get the CSV back with <b>org_id</b>, <b>status</b>, <b>message</b> and <b>environment</b> filled in.</li>

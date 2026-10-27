@@ -14,14 +14,16 @@ var RegCore = (function () {
   const STATUS_DONE = 'Completed';
   const STATUS_FAIL = 'Failed';
   const REQUEST_TIMEOUT_MS = 30000;
+  const ID_HEADER = 'Share your pre production subscriber ID/IDs';
+  const VERSION_HEADER = 'Share the IGM version';
   const ROUTE = '/api/plan/create-token-by-subscriber';
 
   const text = (v) => String(v === null || v === undefined ? '' : v).trim();
 
   function toPlatformId(value) {
     const s = text(value).toLowerCase().replace(/[\s_-]+/g, '');
-    if (s === 'igmv1' || s === 'v1' || s === '2') return 2;
-    if (s === 'igmv2' || s === 'v2' || s === '3') return 3;
+    if (s === 'igmv1' || s === 'v1' || s === '1') return 2;
+    if (s === 'igmv2' || s === 'v2' || s === '2') return 3;
     return null;
   }
 
@@ -141,8 +143,13 @@ var RegCore = (function () {
     const header = table[0].map((h) => text(h));
     const cols = {};
     header.forEach((h, i) => { if (h) cols[h.toLowerCase()] = i; });
-    if (cols.igm_version === undefined || (cols.subscriber_id === undefined && cols.org_id === undefined)) {
-      throw new Error(`Row 1 must contain the headers subscriber_id and IGM_version. Found: ${header.filter(Boolean).join(', ') || '(nothing)'}`);
+    // the old header names still work
+    if (cols[ID_HEADER.toLowerCase()] === undefined && cols.subscriber_id !== undefined) cols[ID_HEADER.toLowerCase()] = cols.subscriber_id;
+    if (cols[VERSION_HEADER.toLowerCase()] === undefined && cols.igm_version !== undefined) cols[VERSION_HEADER.toLowerCase()] = cols.igm_version;
+    const idKey = ID_HEADER.toLowerCase();
+    const versionKey = VERSION_HEADER.toLowerCase();
+    if (cols[versionKey] === undefined || (cols[idKey] === undefined && cols.org_id === undefined)) {
+      throw new Error(`Row 1 must contain the headers "${ID_HEADER}" and "${VERSION_HEADER}". Found: ${header.filter(Boolean).join(', ') || '(nothing)'}`);
     }
     ['org_id', 'status', 'message', 'environment'].forEach((name) => {
       if (cols[name] !== undefined) return;
@@ -156,9 +163,9 @@ var RegCore = (function () {
 
     const rows = [];
     for (let r = 1; r < table.length; r += 1) {
-      const idText = get(r, 'subscriber_id');
+      const idText = get(r, idKey);
       const orgText = get(r, 'org_id');
-      const verText = get(r, 'igm_version');
+      const verText = get(r, versionKey);
       const statusText = get(r, 'status');
       if (!idText && !orgText && !verText && !statusText) continue; // blank line
       rows.push({
@@ -208,8 +215,8 @@ var RegCore = (function () {
       else if (row.orgText) {
         if (orgId === null) { record(row, STATUS_FAIL, 'invalid org_id', null); continue; }
         payload.organisation_id = orgId;
-      } else { record(row, STATUS_FAIL, cols.subscriber_id !== undefined ? 'subscriber_id is empty' : 'org_id is empty', null); continue; }
-      if (platformId === null) { record(row, STATUS_FAIL, 'invalid IGM_version (use IGMv1 or IGMv2)', null); continue; }
+      } else { record(row, STATUS_FAIL, cols[idKey] !== undefined ? `"${ID_HEADER}" is empty` : 'org_id is empty', null); continue; }
+      if (platformId === null) { record(row, STATUS_FAIL, `invalid "${VERSION_HEADER}" (use 1 or 2, or IGMv1 or IGMv2)`, null); continue; }
       payload.platform_id = platformId;
 
       // eslint-disable-next-line no-await-in-loop
@@ -229,7 +236,7 @@ var RegCore = (function () {
   }
 
   // Header row only: no data. Users fill in their own subscriber ids.
-  const TEMPLATE_CSV = 'subscriber_id,IGM_version\n';
+  const TEMPLATE_CSV = `${ID_HEADER},${VERSION_HEADER}\n`;
 
   return { TEMPLATE_CSV, apiBackend, processCustomers };
 }());
@@ -261,6 +268,7 @@ var RegCore = (function () {
     document.body.className = prod ? 'prod' : '';
     $('envUat').setAttribute('aria-checked', String(env === 'UAT'));
     $('envProd').setAttribute('aria-checked', String(prod));
+    $('envSwitch').setAttribute('data-env', prod ? 'prod' : 'uat'); // moves the sliding pill
     var shown = urls[env] === '' ? window.location.host + ' (this server)' : urls[env];
     $('modeBadge').textContent = env + (prod ? ' - REAL CREDENTIALS' : '');
     $('modeBadge').className = 'badge' + (prod ? ' prod' : '');
