@@ -1,8 +1,8 @@
 # Registration automation (hosted page)
 
 Upload a CSV with `Share your pre production subscriber ID/IDs` and `Share the IGM version` columns. Each row is sent to the onboarding API's
-`POST /api/plan/create-token-by-subscriber` in the selected environment (UAT or PROD). The API finds the organisation
-for the subscriber id and creates the IGM token. You download the CSV back with `org_id`, `status`, `message` and
+`POST /api/plan/create-token-by-subscriber` in the selected environment (UAT or PROD). If the row has an `org_id` it is used first; otherwise the API finds the organisation
+for the subscriber URL (put the URL in that column) and creates the IGM token. You download the CSV back with `org_id`, `status`, `message` and
 `environment` filled in.
 
 This folder has no database access and no secrets. It only needs the address of each environment's API.

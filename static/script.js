@@ -5,7 +5,7 @@
  */
 
 /*
- * The logic of the page. The API does the lookup (subscriber id -> organisation) and creates the token.
+ * The logic of the page. The API does the lookup (subscriber url -> organisation, only when the row has no org_id) and creates the token.
  * This page does everything else: reads the CSV, checks each row, turns IGMv1 / IGMv2 into platform_id 2 / 3,
  * calls the API once per row, skips finished rows, stops cleanly on a rate limit or network problem,
  * and fills org_id, status, message and environment into the CSV you download.
@@ -187,13 +187,13 @@ var RegCore = (function () {
       set(row.r, 'environment', environment);
       // The org id of a previous run belongs to another environment's database: replace it, never trust it.
       if (orgId) set(row.r, 'org_id', String(orgId));
-      else if (!row.idText) { /* org_id-only row: keep the org id the user gave */ } else set(row.r, 'org_id', '');
+      else if (row.userOrg) { /* keep the org id the user gave */ } else set(row.r, 'org_id', '');
       if (status === STATUS_DONE) counts.completed += 1; else counts.failed += 1;
       const res = {
         row: row.r + 1,
         subscriber_id: row.idText,
         igm_version: row.verText,
-        org_id: orgId ? String(orgId) : (row.idText ? '' : row.orgText),
+        org_id: orgId ? String(orgId) : (row.userOrg || ''),
         status,
         message,
       };
@@ -206,13 +206,17 @@ var RegCore = (function () {
 
       // Checks the API does not do: what to send, and whether the row is usable at all.
       const platformId = toPlatformId(row.verText);
-      const orgId = toOrgId(row.orgText);
+      // An org_id left by a run in the OTHER environment belongs to that environment's database: when the row
+      // also has a subscriber url, ignore it and look the url up instead.
+      const otherEnv = row.envText && row.envText.toUpperCase() !== environment.toUpperCase();
+      row.userOrg = row.idText && otherEnv ? '' : row.orgText;
+      const orgId = toOrgId(row.userOrg);
       const payload = {};
-      if (row.idText) payload.subscriber_id = row.idText;
-      else if (row.orgText) {
+      if (row.userOrg) {
         if (orgId === null) { record(row, STATUS_FAIL, 'invalid org_id', null); continue; }
         payload.organisation_id = orgId;
-      } else { record(row, STATUS_FAIL, cols[idKey] !== undefined ? `"${ID_HEADER}" is empty` : 'org_id is empty', null); continue; }
+      } else if (row.idText) payload.subscriber_url = row.idText;
+      else { record(row, STATUS_FAIL, 'Add an org_id or a subscriber url', null); continue; }
       if (platformId === null) { record(row, STATUS_FAIL, `invalid "${VERSION_HEADER}" (use IGMv1 or IGMv2)`, null); continue; }
       payload.platform_id = platformId;
 
