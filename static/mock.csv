@@ -1,0 +1,5 @@
+Share your pre production subscriber ID/IDs,Share the IGM version,org_id
+https://seller-app.example.com,IGMv1,
+http://buyer-app.example.org/,IGMv2,
+,IGMv1,1001
+https://logistics.example.net,IGMv2,1002
