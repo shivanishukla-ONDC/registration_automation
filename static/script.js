@@ -236,10 +236,13 @@ var RegCore = (function () {
     return { csv: toCsv(table), rows: results, counts, halted };
   }
 
-  // Header row only: no data. Users fill in their own subscriber ids.
-  const TEMPLATE_CSV = `${ID_HEADER},${VERSION_HEADER}\n`;
+  // Header row only: no data. Users fill in their own subscriber urls / org ids.
+  const TEMPLATE_CSV = `${ID_HEADER},${VERSION_HEADER},org_id\n`;
 
-  return { TEMPLATE_CSV, apiBackend, processCustomers };
+  // Made-up example rows for the "sample" download, one per case (same rows as static/mock.csv).
+  const SAMPLE_CSV = `${TEMPLATE_CSV}https://seller-app.example.com,IGMv1,\nhttp://buyer-app.example.org/,IGMv2,\n,IGMv1,1001\nhttps://logistics.example.net,IGMv2,1002\n`;
+
+  return { TEMPLATE_CSV, SAMPLE_CSV, apiBackend, processCustomers };
 }());
 
 (function () {
@@ -329,14 +332,16 @@ var RegCore = (function () {
   drop.addEventListener('dragleave', function () { drop.classList.remove('over'); });
   drop.addEventListener('drop', function (e) { e.preventDefault(); drop.classList.remove('over'); readFile(e.dataTransfer.files[0]); });
   input.addEventListener('change', function () { readFile(input.files[0]); });
-  $('templateDownload').addEventListener('click', function () {
+  function downloadCsv(text, name) {
     var a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob([RegCore.TEMPLATE_CSV], { type: 'text/csv' }));
-    a.download = 'registration_template.csv';
+    a.href = URL.createObjectURL(new Blob([text], { type: 'text/csv' }));
+    a.download = name;
     document.body.appendChild(a);
     a.click();
     setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
-  });
+  }
+  $('templateDownload').addEventListener('click', function () { downloadCsv(RegCore.TEMPLATE_CSV, 'registration_template.csv'); });
+  $('sampleDownload').addEventListener('click', function () { downloadCsv(RegCore.SAMPLE_CSV, 'registration_sample.csv'); });
 
   /* ---------- results ---------- */
   function cell(tr, value, cls) {
