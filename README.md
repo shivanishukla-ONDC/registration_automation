@@ -37,13 +37,13 @@ Sample file: `static/mock.csv` (made-up values only; replace them with your own)
 
 | Column | Required? | What to enter | Example |
 |---|---|---|---|
-| `Share your pre production subscriber ID/IDs` | One of this or `org_id` | The **subscriber URL**. `http://`, `https://`, a trailing `/` and capital letters do not matter | `https://seller-app.example.com` |
+| `Share your pre production subscriber ID/IDs` | One of this or `org_id` | The **subscriber URL, written without `http://` or `https://`** (and without a trailing `/`) | `seller-app.example.com` |
 | `Share the IGM version` | Yes | `IGMv1` or `IGMv2` (also accepted: `v1`, `v2`, `2`, `3`) | `IGMv1` |
 | `org_id` | One of this or the subscriber URL | The organisation id (a whole number). It is used first; leave it empty to use the subscriber URL | `1001` |
 
 `status`, `message` and `environment` are added by the page; do not fill them in.
 
-The four rows in `mock.csv` show the four cases: subscriber URL only, subscriber URL with a trailing `/`, `org_id` only
+The four rows in `mock.csv` show the cases: subscriber URL only (two rows), `org_id` only
 (first column empty) and both (the `org_id` is used and the URL is ignored). A row with neither value fails.
 The format notes are here and not inside the CSV, because every line of a CSV is read as a row.
 

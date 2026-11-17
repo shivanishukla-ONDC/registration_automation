@@ -215,7 +215,7 @@ var RegCore = (function () {
       if (row.userOrg) {
         if (orgId === null) { record(row, STATUS_FAIL, 'invalid org_id', null); continue; }
         payload.organisation_id = orgId;
-      } else if (row.idText) payload.subscriber_url = row.idText;
+      } else if (row.idText) payload.subscriber_id = row.idText; // the API takes the subscriber url in this field
       else { record(row, STATUS_FAIL, 'Add an org_id or a subscriber url', null); continue; }
       if (platformId === null) { record(row, STATUS_FAIL, `invalid "${VERSION_HEADER}" (use IGMv1 or IGMv2)`, null); continue; }
       payload.platform_id = platformId;
@@ -240,7 +240,7 @@ var RegCore = (function () {
   const TEMPLATE_CSV = `${ID_HEADER},${VERSION_HEADER},org_id\n`;
 
   // Made-up example rows for the "sample" download, one per case (same rows as static/mock.csv).
-  const SAMPLE_CSV = `${TEMPLATE_CSV}https://seller-app.example.com,IGMv1,\nhttp://buyer-app.example.org/,IGMv2,\n,IGMv1,1001\nhttps://logistics.example.net,IGMv2,1002\n`;
+  const SAMPLE_CSV = `${TEMPLATE_CSV}seller-app.example.com,IGMv1,\nbuyer-app.example.org,IGMv2,\n,IGMv1,1001\nlogistics.example.net,IGMv2,1002\n`;
 
   return { TEMPLATE_CSV, SAMPLE_CSV, apiBackend, processCustomers };
 }());
