@@ -5,7 +5,7 @@
  */
 
 /*
- * The logic of the page. The API does the lookup (subscriber url -> organisation, only when the row has no org_id) and creates the token.
+ * The logic of the page. The API does the lookup (subscriber id -> organisation, only when the row has no org_id) and creates the token.
  * This page does everything else: reads the CSV, checks each row, turns IGMv1 / IGMv2 into platform_id 2 / 3,
  * calls the API once per row, skips finished rows, stops cleanly on a rate limit or network problem,
  * and fills org_id, status, message and environment into the CSV you download.
@@ -207,7 +207,7 @@ var RegCore = (function () {
       // Checks the API does not do: what to send, and whether the row is usable at all.
       const platformId = toPlatformId(row.verText);
       // An org_id left by a run in the OTHER environment belongs to that environment's database: when the row
-      // also has a subscriber url, ignore it and look the url up instead.
+      // also has a subscriber id, ignore it and look the id up instead.
       const otherEnv = row.envText && row.envText.toUpperCase() !== environment.toUpperCase();
       row.userOrg = row.idText && otherEnv ? '' : row.orgText;
       const orgId = toOrgId(row.userOrg);
@@ -215,8 +215,8 @@ var RegCore = (function () {
       if (row.userOrg) {
         if (orgId === null) { record(row, STATUS_FAIL, 'invalid org_id', null); continue; }
         payload.organisation_id = orgId;
-      } else if (row.idText) payload.subscriber_id = row.idText; // the API takes the subscriber url in this field
-      else { record(row, STATUS_FAIL, 'Add an org_id or a subscriber url', null); continue; }
+      } else if (row.idText) payload.subscriber_id = row.idText;
+      else { record(row, STATUS_FAIL, 'Add an org_id or a subscriber id', null); continue; }
       if (platformId === null) { record(row, STATUS_FAIL, `invalid "${VERSION_HEADER}" (use IGMv1 or IGMv2)`, null); continue; }
       payload.platform_id = platformId;
 
@@ -236,7 +236,7 @@ var RegCore = (function () {
     return { csv: toCsv(table), rows: results, counts, halted };
   }
 
-  // Header row only: no data. Users fill in their own subscriber urls / org ids.
+  // Header row only: no data. Users fill in their own subscriber ids / org ids.
   const TEMPLATE_CSV = `${ID_HEADER},${VERSION_HEADER},org_id\n`;
 
   // Made-up example rows for the "sample" download, one per case (same rows as static/mock.csv).

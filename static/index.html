@@ -101,8 +101,8 @@
   <section class="card">
     <h2>Upload your CSV</h2>
     <ul class="steps">
-      <li>One row per customer, with the columns <b>Share your pre production subscriber ID/IDs</b> (put the <b>subscriber URL</b> here, without http:// or https://) and <b>Share the IGM version</b> (IGMv1 or IGMv2). An optional <b>org_id</b> column is used first when filled.</li>
-      <li>Each row is sent to the API of the selected environment, which uses the org_id, or finds the organisation for the subscriber URL, and creates the credentials for that IGM version.</li>
+      <li>One row per customer, with the columns <b>Share your pre production subscriber ID/IDs</b> and <b>Share the IGM version</b> (IGMv1 or IGMv2). An optional <b>org_id</b> column is used first when filled.</li>
+      <li>Each row is sent to the API of the selected environment, which uses the org_id, or finds the organisation for the subscriber ID, and creates the credentials for that IGM version.</li>
       <li>Rows are processed one by one. A row already marked Completed for the selected environment is skipped.</li>
       <li>You get the CSV back with <b>org_id</b>, <b>status</b>, <b>message</b> and <b>environment</b> filled in.</li>
     </ul>
